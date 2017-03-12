@@ -1,0 +1,6 @@
+[submodule "job_queue"]
+	path = job_queue
+	url = git@github.com:skateonrails/job_queue.git
+[submodule "job_api"]
+	path = job_api
+	url = git@github.com:skateonrails/job_api.git
