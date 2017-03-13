@@ -18,17 +18,12 @@ services:
       retries: 5
 
   postgres:
-    image: 'healthcheck/postgres'
+    image: 'postgres'
     environment:
       POSTGRES_USER: 'postgres'
-      POSTGRES_PASSWORD: '123'
-    ports:
-      - '5433:5433'
-    healthcheck:
-      test: ["CMD", 'docker-healthcheck']
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      POSTGRES_PASSWORD: 'postgresPassword'
+    volumes:
+      - 'postgres:/var/lib/postgresql/data'
 
   job_api:
     build: ./job_api
@@ -38,14 +33,14 @@ services:
       rabbitmq:
         condition: service_healthy
       postgres:
-        condition: service_healthy
+        condition: service_started
     environment:
       PORT: 3000
       AMQP_ADDRESS: 'amqp://rabbitUser:rabbitPass@rabbitmq:5672/vhost'
       DATABASE_USERNAME: 'postgres'
-      DATABASE_PASSWORD: '123'
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5433
+      DATABASE_PASSWORD: 'postgresPassword'
+      DATABASE_HOST: 'postgres'
+      DATABASE_PORT: 5432
     volumes:
       - ./job_api/:/app
 
