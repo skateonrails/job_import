@@ -25,17 +25,18 @@ services:
     volumes:
       - 'postgres:/var/lib/postgresql/data'
 
+
   job_api:
     build: ./job_api
     ports:
       - '3000:3000'
+    command: bash -c "rm -rf ./tmp/pids && rake db:create && rake db:migrate && rake db:seed && rails s -p 3000 -b '0.0.0.0'"
     depends_on:
       rabbitmq:
         condition: service_healthy
       postgres:
         condition: service_started
     environment:
-      PORT: 3000
       AMQP_ADDRESS: 'amqp://rabbitUser:rabbitPass@rabbitmq:5672/vhost'
       DATABASE_USERNAME: 'postgres'
       DATABASE_PASSWORD: 'postgresPassword'
@@ -43,17 +44,49 @@ services:
       DATABASE_PORT: 5432
     volumes:
       - ./job_api/:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+
+  sneakers_job:
+    build: ./job_api
+    command: bash -c "WORKERS=JobImportWorker rake sneakers:run"
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      job_api:
+        condition: service_healthy
+    environment:
+      AMQP_ADDRESS: 'amqp://rabbitUser:rabbitPass@rabbitmq:5672/vhost'
+      DATABASE_USERNAME: 'postgres'
+      DATABASE_PASSWORD: 'postgresPassword'
+      DATABASE_HOST: 'postgres'
+      DATABASE_PORT: 5432
+    volumes:
+      - ./job_api/:/sneakers_job
+
 
   job_queue:
     build: ./job_queue
+    command: ./start.sh
     depends_on:
       rabbitmq:
         condition: service_healthy
     environment:
       AMQP_ADDRESS: 'amqp://rabbitUser:rabbitPass@rabbitmq:5672/vhost'
+      RABBIT_MQ_HOST: rabbitmq
     volumes:
-      - ./job_queue/:/app
+      - ./job_queue/:/job_queue
+
 
 volumes:
   postgres:
   rabbitmq:
+  # job_api:
+  # job_queue:
+  # sneakers_job:
