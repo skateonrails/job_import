@@ -57,9 +57,10 @@ services:
     depends_on:
       job_api:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     links:
       - postgres
-      - rabbitmq
     environment:
       AMQP_ADDRESS: 'amqp://rabbitUser:rabbitPass@rabbitmq:5672/vhost'
       DATABASE_USERNAME: 'postgres'
@@ -72,11 +73,14 @@ services:
 
   job_queue:
     build: ./job_queue
-    command: ./start.sh
+    command: bash -c "sleep 10 && ./start.sh"
     depends_on:
-      - sneakers_job
-    links:
-      - rabbitmq
+      job_api:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      sneakers_job:
+        condition: service_started
     environment:
       AMQP_ADDRESS: 'amqp://rabbitUser:rabbitPass@rabbitmq:5672/vhost'
       RABBIT_MQ_HOST: rabbitmq
