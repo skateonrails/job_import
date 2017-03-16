@@ -77,7 +77,7 @@ You can access the API using the `curl` command tool, as the following examples:
 
 - GET Percentage by category
 
-  `curl http://localhost:3000/category/1`
+  `curl http://localhost:3000/category/11`
 
 
 The `Ab0CprY2MtCnFzHrbkXWHAtt` parameter is a token created with `db:seeds` command from Job API, that "simulates" a user token. If you create another user (maybe using `docker-compose run job_api rails console`), you could use the `api_key` attribute from the newly created `User` to log into protected routes.
